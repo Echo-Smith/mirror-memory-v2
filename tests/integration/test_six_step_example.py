@@ -54,7 +54,7 @@ class TestSixStepExample:
         """User U1 expresses a technical preference, gets recalled, corrects, explains, forgets."""
         svc = _make_service(db)
 
-        scope = Scope(tenant_id="tenant_alpha", app_id="psych", subject_id="user_u1")
+        scope = Scope(tenant_id="tenant_alpha", app_id="app_alpha", subject_id="user_u1")
         context = MemoryContext(scope=scope, purpose="memory_management", session_id="session_s1")
 
         # Step 0: Authorize
@@ -170,8 +170,8 @@ class TestSixStepExample:
         """U1 and U2 don't share memories."""
         svc = _make_service(db)
 
-        scope1 = Scope(tenant_id="t1", app_id="psych", subject_id="u1")
-        scope2 = Scope(tenant_id="t1", app_id="psych", subject_id="u2")
+        scope1 = Scope(tenant_id="t1", app_id="app_alpha", subject_id="u1")
+        scope2 = Scope(tenant_id="t1", app_id="app_alpha", subject_id="u2")
 
         # Authorize both
         svc.sync_authorization(SyncAuthorizationInput(event_type="grant", snapshot=_auth(scope1)))
@@ -200,7 +200,7 @@ class TestSixStepExample:
         """After revocation, new operations are denied."""
         svc = _make_service(db)
 
-        scope = Scope(tenant_id="t1", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="t1", app_id="app_alpha", subject_id="u1")
         ctx = MemoryContext(scope=scope, purpose="memory_management")
 
         # Authorize

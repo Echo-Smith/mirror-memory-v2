@@ -330,7 +330,7 @@ class DeletionJob(Base):
 class BudgetProfile(Base):
     """Per-app budget configuration.
 
-    Each product (Psych, 筆潤智談) has its own profile defining limits.
+    Each product has its own profile defining limits.
     Thresholds are ratios of the hard limit:
     - soft_threshold_ratio: warn/delay
     - hard_threshold_ratio: reject

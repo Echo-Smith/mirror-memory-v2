@@ -34,7 +34,7 @@ class TestDeveloperOnboarding:
     def test_six_step_example_from_docs(self, db: Session):
         """Full observe → wait → recall → correct → explain → forget succeeds from docs."""
         svc = MirrorMemoryService(db)
-        scope = Scope(tenant_id="dev_tenant", app_id="psych", subject_id="dev_user")
+        scope = Scope(tenant_id="dev_tenant", app_id="app_alpha", subject_id="dev_user")
         ctx = MemoryContext(scope=scope, purpose="memory_management", session_id="dev_session")
 
         now = datetime.now(UTC)
@@ -117,7 +117,7 @@ class TestDeveloperOnboarding:
     def test_failure_hints_actionable(self, db: Session):
         """Error messages point to specific fix actions."""
         svc = MirrorMemoryService(db)
-        scope = Scope(tenant_id="hint_tenant", app_id="psych", subject_id="hint_user")
+        scope = Scope(tenant_id="hint_tenant", app_id="app_alpha", subject_id="hint_user")
         ctx = MemoryContext(scope=scope, purpose="memory_management")
 
         # Observe without authorization → clear error

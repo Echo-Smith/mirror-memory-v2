@@ -109,11 +109,11 @@ def database(_db_engine) -> Database:
 
 # Fixed tenant/app pairs for deterministic testing
 TENANT_1 = "tenant_alpha"
-APP_1 = "psych"
+APP_1 = "app_alpha"
 SUBJECT_1 = "user_001"
 
 TENANT_2 = "tenant_beta"
-APP_2 = "bi_run_zhi_tan"
+APP_2 = "app_beta"
 SUBJECT_2 = "user_002"
 
 

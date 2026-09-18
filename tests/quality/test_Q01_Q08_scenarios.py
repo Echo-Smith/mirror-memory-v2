@@ -65,7 +65,7 @@ class TestPreferenceMemory:
     S2 queries technical answer preference."""
 
     def test_preference_remembered_and_scoped(self, db: Session):
-        scope = Scope(tenant_id="q01", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q01", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # S1: express preference
@@ -86,7 +86,7 @@ class TestTemporaryOverride:
     next session queries preference again."""
 
     def test_temporary_not_permanent(self, db: Session):
-        scope = Scope(tenant_id="q02", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q02", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # Long-term preference
@@ -107,7 +107,7 @@ class TestExplicitCorrection:
     """Q03: "From now on, technical questions also start brief"."""
 
     def test_correction_replaces_current(self, db: Session):
-        scope = Scope(tenant_id="q03", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q03", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # Create preference
@@ -137,7 +137,7 @@ class TestPlanChanges:
     """Q04: "Preparing for exam in June"; later "Cancelled exam plan"."""
 
     def test_plan_cancelled_current(self, db: Session):
-        scope = Scope(tenant_id="q04", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q04", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # Announce plan
@@ -152,7 +152,7 @@ class TestPlanChanges:
         assert r.success
 
     def test_plan_history_preserved(self, db: Session):
-        scope = Scope(tenant_id="q04b", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q04b", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         _observe_and_process(svc, ctx, scope, db, "q04b_evt1", "六月准备考试")
@@ -167,7 +167,7 @@ class TestHistoricalAttribution:
     """Q05: "Friend Xiaolin changed jobs"; "I'm still at original company"."""
 
     def test_friend_not_confused_with_user(self, db: Session):
-        scope = Scope(tenant_id="q05", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q05", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         _observe_and_process(svc, ctx, scope, db, "q05_evt1", "朋友小林换了工作")
@@ -188,7 +188,7 @@ class TestInjectionRejection:
     """Q06: assistant speculation and injection attempts."""
 
     def test_assistant_speculation_rejected(self, db: Session):
-        scope = Scope(tenant_id="q06a", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q06a", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # Assistant speculation should not become user fact
@@ -205,7 +205,7 @@ class TestInjectionRejection:
             assert a.source_kind == "assistant"  # not "user"
 
     def test_injection_text_rejected(self, db: Session):
-        scope = Scope(tenant_id="q06b", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q06b", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # Injection attempt — observe succeeds (evidence recorded) but extraction rejects
@@ -238,7 +238,7 @@ class TestIrrelevantQuery:
     """Q07: Only talked about breakfast; query "did I change jobs?"."""
 
     def test_no_fabricated_memory(self, db: Session):
-        scope = Scope(tenant_id="q07", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q07", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # Only talk about breakfast
@@ -259,7 +259,7 @@ class TestFullLifecycle:
     """Q08: authorize → observe → close → delete → retry → re-authorize."""
 
     def test_close_stops_use(self, db: Session):
-        scope = Scope(tenant_id="q08", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q08", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         _observe_and_process(svc, ctx, scope, db, "q08_evt1", "我喜欢猫")
@@ -278,7 +278,7 @@ class TestFullLifecycle:
         assert not r.success
 
     def test_delete_prevents_resurrection(self, db: Session):
-        scope = Scope(tenant_id="q08b", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q08b", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         _observe_and_process(svc, ctx, scope, db, "q08b_evt1", "我喜欢狗")
@@ -300,7 +300,7 @@ class TestFullLifecycle:
             assert r.outcome.outcome == RecallOutcome.NO_MEMORY
 
     def test_reauthorize_new_memories(self, db: Session):
-        scope = Scope(tenant_id="q08c", app_id="psych", subject_id="u1")
+        scope = Scope(tenant_id="q08c", app_id="app_alpha", subject_id="u1")
         svc, ctx = _setup(scope, db)
 
         # Observe
