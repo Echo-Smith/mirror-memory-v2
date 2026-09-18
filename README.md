@@ -1,52 +1,106 @@
-# Mirror Memory v2 操作指南
+# Mirror Memory v2
 
-版本：Draft 0.1，2026-09-17。当前交付是设计与操作规范；内核、SDK、管理命令及自动化测试尚未由本次工作实现，也没有运行生产变更。
+Long-term memory infrastructure for AI conversational products.
 
-## 从这里开始
+## What It Does
 
-目标：先在 Psych 内部证明记忆可靠且有用，再在笔润智谈等产品验证通用性。旧 Mirror 无兼容义务；Psych 现有业务仍保留。首版使用 PostgreSQL、一个 Python 包和独立 worker；embedding 是实验项。
+Mirror Memory lets AI assistants remember users across sessions — preferences, plans, facts — while giving users full control to correct, close, and delete those memories.
 
-| 当前工作 | 阅读入口 | 完成后应拿到什么 |
-| --- | --- | --- |
-| 确认做什么、哪些行为不可破坏 | [需求契约](requirements.md) | R01–R15 的明确范围 |
-| 设计接口、数据、授权和事务 | [详细设计](design.md) | 可实现的边界和失败语义 |
-| 安排实现顺序、记录进度 | [实施任务](tasks.md) | 依赖清楚、可验收的工作单元 |
-| 按 M0–M4 推进项目 | [分阶段执行指南](execution-guide.md) | 每阶段的操作、证据和放行结论 |
-| 设计测试、选择性价比工作点 | [验证与校准](validation.md) | 契约结果、质量报告、默认 profile |
-| 每日运行、故障、升级、清理 | [运行手册](operations.md) | 可重复执行的巡检与处置记录 |
-| 填写批次、预算、发布与事故记录 | [记录模板](templates.md) | 不依赖聊天历史的执行档案 |
+**Not a chat app.** It's an infrastructure layer (SDK + backend) that products like Psych and 筆潤智談 integrate with.
 
-[Architecture RFC](../../docs/plans/2026-09-16-mirror-memory-v2-architecture-rfc.md)解释架构取舍。本目录将它细化为工作规范；若两者冲突，先修正文档，不能由实现者自行选取方便的版本。安全、授权、删除语义变更必须同步 RFC、需求和测试；措辞或步骤修订只更新相关指南。
+## Architecture
 
-## 如何使用
+Three-phase Worker: **Claim → Compute → Publish**
 
-1. 从 [执行指南](execution-guide.md) 确认当前阶段；现在是 M0，文档已起草，未宣称评审或测试通过。
-2. 复制 [执行记录模板](templates.md)，填写当前阶段、代码版本、负责人和环境。一个人可以兼任多角色。
-3. 按 [任务表](tasks.md) 顺序完成当前阶段，附真实证据；勾选框表示工程任务完成，不是文档写完。
-4. 对照阶段退出条件，只在证据满足时进入下一阶段。失败留在当前阶段处理，不靠更改阈值追认通过。
-5. 每个运行批次绑定不可变配置版本；调整参数开启新批次并保留比较记录。
+```
+Claim (T1)              Compute              Publish (T2)
+CAS lease + auth check   Rule extraction      SELECT FOR UPDATE barrier
+Load evidence snapshot   No DB access         Write atoms + CAS view
+Commit → immutable       Safe to fail         Fencing complete
+ticket                                        Commit or rollback
+```
 
-## 周期导航
+6 invariants (I1–I6) with concurrent/phase-interleaving tests on PostgreSQL.
 
-| 周期 | 必做动作 |
-| --- | --- |
-| 每项实现 | 行为验收、需求追踪、相关测试；只扩大测试到受影响边界 |
-| 每次模型/Prompt/profile 变更 | 固定样例回归、成本比较、版本记录、可回退性检查 |
-| 每次内部测试批次 | 确认授权与保留、预算预留、数据集版本、开始/结束记录 |
-| 每个有测试活动的工作日 | 看授权同步、删除、队列、失败、费用；无人值守时需自动告警 |
-| 每周或一个完整测试周期结束 | 审核错误样例、使用效果与成本曲线，决定是否调整 profile |
-| 每次发布 | 执行发布检查和恢复演练；按允许的测试名单逐步启用 |
-| 每月（持续运行时） | 权限/保留审计、隔离恢复演练、容量趋势复核 |
-| 每次撤销、删除、退役 | 立即阻断使用、跟踪清理、验证副本、记录恢复防复活证据 |
+## Quick Start
 
-阶段按产物推进，不承诺固定周数。没有真实数据、付费模型或生产发布的授权时，仍可完成文档、确定性实现和合成数据验证。
+```bash
+pip install -e ".[dev]"
 
-## 状态用语
+# SQLite (development)
+export DATABASE_URL="sqlite:///./mirror_memory.db"
+export MIRROR_ENV="test"
+python -m mirror_memory.cli init
 
-- **已决定**：用户已经确认的方向，例如 Psych 先试点、PostgreSQL、无旧版兼容。
-- **设计约定**：本指南给出的实现提案，需在对应任务中冻结并测试。
-- **候选默认**：可直接评审的初始值，不是行业标准，也不表示已启用。
-- **待测**：测试才能产出的参数；没有结果不得填写成“通过”。
-- **上线前必填**：预算、部署目的地等不能替业务凭空确定的值；仅阻塞相关外部动作。
+# PostgreSQL (production)
+export DATABASE_URL="postgresql+psycopg://user:pass@host:5432/mirror_memory"
+python -m mirror_memory.cli init
 
-本目录的接口名、模块路径和运维动作均为设计约定。真实可执行命令必须在 T03/T11 实现并填入命令登记表；不能拿旧版同名 CLI 当作新版工具运行。
+# Run tests
+pytest -v
+
+# Start HTTP API
+uvicorn mirror_memory.api:app --reload
+```
+
+## API Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/v1/auth/grant` | Grant authorization |
+| POST | `/v1/auth/revoke` | Revoke authorization |
+| POST | `/v1/observe` | Accept user event |
+| POST | `/v1/recall` | Recall memories |
+| POST | `/v1/correct` | Correct a memory |
+| POST | `/v1/forget` | Delete memories |
+| POST | `/v1/explain` | Explain source chain |
+| POST | `/v1/export` | Export user data |
+| POST | `/v1/operation` | Query operation status |
+| GET | `/v1/health` | Health check |
+
+## CLI Commands
+
+```bash
+python -m mirror_memory.cli status          # System status
+python -m mirror_memory.cli observe --help  # Send observation
+python -m mirror_memory.cli recall --help   # Recall memories
+python -m mirror_memory.cli correct --help  # Correct memory
+python -m mirror_memory.cli forget --help   # Delete memories
+python -m mirror_memory.cli explain --help  # Explain source
+python -m mirror_memory.cli verify-deletion --help
+python -m mirror_memory.cli auth grant --help
+python -m mirror_memory.cli jobs --help
+```
+
+## Documentation
+
+| Document | Purpose |
+|---|---|
+| [Requirements](docs/requirements.md) | R01–R15 acceptance criteria |
+| [Design](docs/design.md) | Interface contracts, data model, transactions |
+| [Tasks](docs/tasks.md) | T00–T14 implementation tracking |
+| [Execution Guide](docs/execution-guide.md) | M0–M4 phased approach |
+| [Validation](docs/validation.md) | C01–C20 contract tests, Q01–Q08 quality scenarios |
+| [Operations](docs/operations.md) | Runbooks, incident response |
+| [Invariants](docs/invariants.md) | 6 non-breakable invariants (I1–I6) |
+| [Budget](docs/budget.md) | Budget guardrail design (R11) |
+| [Integration Guide](docs/integration-guide.md) | Developer onboarding walkthrough |
+| [Operations Playbook](docs/operations-playbook.md) | CLI commands, failure handling |
+| [Decisions](docs/decisions/) | Architecture decision records |
+
+## Test Results
+
+```
+ruff:  0 errors
+mypy:  0 errors
+SQLite:     139 passed, 16 skipped
+PostgreSQL: 154 passed, 1 skipped
+```
+
+## Project Status
+
+- **M0–M1**: Complete — core kernel, 12 tables, 8 repositories, 3-phase worker
+- **M2 (partial)**: Psych adapter, budget guardrails, HTTP API, deterministic extractor
+- **M2 (pending)**: Real Psych integration, model quality baseline
+- **M3**: Internal acceptance (requires Psych code + test users)
+- **M4**: 筆潤智談 integration (requires second product code)
