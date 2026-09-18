@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mirror-memory"
+version = "0.1.0"
+description = "Long-term memory infrastructure for AI conversational products"
+requires-python = ">=3.11"
+dependencies = [
+    "sqlalchemy>=2.0,<3.0",
+    "psycopg[binary]>=3.1,<4.0",
+    "alembic>=1.12,<2.0",
+    "pydantic>=2.0,<3.0",
+    "fastapi>=0.110,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9.0",
+    "pytest-asyncio>=0.23,<1.0",
+    "pytest-timeout>=2.2,<3.0",
+    "httpx>=0.27,<1.0",
+    "ruff>=0.3,<1.0",
+    "mypy>=1.9,<2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mirror_memory"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "contract_C01: Isolation tests",
+    "contract_C02: Authorization missing/fake/expired",
+    "contract_C03: Authorization version ordering",
+    "contract_C04: Revoke timing",
+    "contract_C05: Reliable receipt and idempotency",
+    "contract_C06: Lease fencing and duplicate delivery",
+    "contract_C07: Concurrent view revision conflict",
+    "contract_C08: Source validity and injection rejection",
+    "contract_C09: Recall status distinction",
+    "contract_C10: Recall mode, budget, expiry",
+    "contract_C11: Correction semantics",
+    "contract_C12: Deletion barrier and cleanup",
+    "contract_C13: Backup recovery and deletion replay",
+    "contract_C14: Lifecycle and self-reinforcement prevention",
+    "contract_C15: Explain traceability",
+    "contract_C16: Budget reservation atomicity",
+    "contract_C17: Capacity guardrails",
+    "contract_C18: Projection rebuild and schema upgrade",
+    "contract_C19: Developer onboarding walkthrough",
+    "contract_C20: Cross-product reuse",
+    "quality_Q01: Preference memory",
+    "quality_Q02: Temporary override vs long-term preference",
+    "quality_Q03: Explicit correction",
+    "quality_Q04: Plan changes",
+    "quality_Q05: Historical attribution",
+    "quality_Q06: Injection/speculation rejection",
+    "quality_Q07: Irrelevant query",
+    "quality_Q08: Full lifecycle",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N999", "F841", "RUF059"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = false
+disallow_untyped_defs = false
+check_untyped_defs = true
