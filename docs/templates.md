@@ -157,7 +157,7 @@ proposed_change:
 affected_R_C_Q_ids:
 alternatives_and_reason:
 evidence:
-impact_on_psych_and_next_product:
+impact_on_products:
 rollback_or_exit:
 status: proposed / accepted / rejected / superseded
 owner:

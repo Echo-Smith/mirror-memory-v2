@@ -47,15 +47,15 @@ All 8 operations as defined in design.md §2:
 - DATABASE_URL from environment variable only, never hardcoded
 - Docker Compose provides isolated test database
 
-### 7. Psych Pilot
+### 7. 首个产品试点
 - First integration product; no backward compatibility with old Mirror
-- app_id="psych", isolated from future products
+- app_id="my_app", isolated from future products
 - Modes: off / shadow / active_internal (M2 scope)
 
-### 8. 筆潤智談
+### 8. 第二产品
 - Second product, uses independent app_id
 - Validates cross-product reuse (R15)
-- Cannot access Psych data
+- Cannot access first product data
 
 ## Not Decided (deferred to later tasks)
 - HTTP transport layer (not M1 scope)

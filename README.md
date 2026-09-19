@@ -88,9 +88,9 @@ uvicorn mirror_memory.api:app --reload
 
 ```bash
 python -m mirror_memory.cli status
-python -m mirror_memory.cli observe --tenant t1 --app psych --subject u1 --text "我喜欢猫"
-python -m mirror_memory.cli recall --tenant t1 --app psych --subject u1 --query "宠物"
-python -m mirror_memory.cli auth grant --tenant t1 --app psych --subject u1
+python -m mirror_memory.cli observe --tenant t1 --app my_app --subject u1 --text "我喜欢猫"
+python -m mirror_memory.cli recall --tenant t1 --app my_app --subject u1 --query "宠物"
+python -m mirror_memory.cli auth grant --tenant t1 --app my_app --subject u1
 ```
 
 ## 测试结果
@@ -129,9 +129,9 @@ PostgreSQL: 131 passed
 
 - **M0-M1**: 完成 — 核心内核、12 张表、8 个仓库、三阶段 Worker
 - **M2 (部分)**: 预算护栏、HTTP API、LLM 提取器、质量基线
-- **M2 (待做)**: Psych 真实集成、模型质量基线
-- **M3**: 内部验收（需要 Psych 代码 + 测试者）
-- **M4**: 筆潤智談集成（需要第二产品代码）
+- **M2 (待做)**: 首个产品集成、模型质量基线
+- **M3**: 内部验收（需要产品代码 + 测试者）
+- **M4**: 第二产品集成（需要产品代码）
 
 ## License
 

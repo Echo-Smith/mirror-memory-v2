@@ -154,12 +154,13 @@ python -m mirror_memory.cli jobs --scope-filter \
   --tenant my_tenant --app my_app --subject user_001
 ```
 
-## 5. Psych 适配器接入
+## 5. 产品适配器接入
 
 ```python
-from mirror_memory.adapters.psych_adapter import PsychAdapter, AdapterMode
+# 产品适配器示例
+# from myapp.adapter import MyAdapter
 
-adapter = PsychAdapter(session, app_id="psych")
+adapter = MyAdapter(session, app_id="my_app")
 
 # 设置模式
 adapter.set_mode(AdapterMode.SHADOW)  # 或 ACTIVE_INTERNAL

@@ -45,7 +45,7 @@ UsageLedger (不可变记账)
 
 不同产品的差异全部在 BudgetProfile 中：
 
-| 参数 | Psych (心理陪伴) | 筆潤智談 (写作) |
+| 参数 | 产品 A | 产品 B |
 |---|---|---|
 | scope_daily_token_limit | 10000 | 20000 |
 | scope_daily_cost_limit | 1.00 | 2.00 |
@@ -85,7 +85,7 @@ summary = svc.get_usage_summary(scope)
 #   "period_tokens": 3200,
 #   "active_calls": 1,
 #   "profile": {
-#     "app_id": "psych",
+#     "app_id": "app_alpha",
 #     "daily_cost_limit": 1.0,
 #     "daily_token_limit": 10000,
 #     "concurrent_jobs_limit": 2
