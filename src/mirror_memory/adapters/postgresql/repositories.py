@@ -306,21 +306,38 @@ class JobRepository:
         ttl_seconds: int = 300,
         scope_id: str | None = None,
     ) -> tuple[bool, int]:
-        """Attempt to acquire a lease using true CAS (compare-and-swap).
+        """Attempt to acquire a lease using conditional UPDATE.
 
-        Uses conditional UPDATE with RETURNING for database-level atomicity.
+        Compatible with both PostgreSQL and SQLite.
         Allows reclaiming "running" jobs whose lease has expired.
-
-        If scope_id is provided, the job must also belong to that scope,
-        preventing cross-scope lease hijacking.
 
         Returns (acquired, lease_token).
         """
         from sqlalchemy import update
 
         now = _utcnow()
-        new_token_subquery = Job.lease_token + 1
 
+        # Read current state to determine if we can acquire
+        job = self.get_by_id(job_id)
+        if job is None:
+            return False, 0
+
+        lease_exp = job.lease_expires_at
+        if lease_exp is not None and lease_exp.tzinfo is None:
+            lease_exp = lease_exp.replace(tzinfo=UTC)
+        can_acquire = job.state == "pending" or (
+            job.state == "running"
+            and lease_exp is not None
+            and lease_exp < now
+        )
+        if not can_acquire:
+            return False, job.lease_token
+
+        # Scope guard
+        if scope_id is not None and job.scope_id != scope_id:
+            return False, job.lease_token
+
+        # Conditional UPDATE — only succeeds if state still matches
         pending_cond = Job.state == "pending"
         expired_running_cond = (
             (Job.state == "running")
@@ -335,27 +352,27 @@ class JobRepository:
         if scope_id is not None:
             where_conditions.append(Job.scope_id == scope_id)
 
+        new_token = job.lease_token + 1
         stmt = (
             update(Job)
             .where(*where_conditions)
             .values(
-                lease_token=new_token_subquery,
+                lease_token=new_token,
                 lease_owner=owner,
                 lease_expires_at=now + timedelta(seconds=ttl_seconds),
                 state="running",
             )
-            .returning(Job.lease_token)
         )
 
         result = self._session.execute(stmt)
-        row = result.first()
         self._session.flush()
 
-        if row is None:
-            job = self.get_by_id(job_id)
-            return False, job.lease_token if job else 0
+        if result.rowcount == 0:  # type: ignore[union-attr]
+            # CAS failed — another worker got it
+            refreshed = self.get_by_id(job_id)
+            return False, refreshed.lease_token if refreshed else 0
 
-        return True, row[0]
+        return True, new_token
 
     def complete(self, job_id: str, lease_token: int, reason: str | None = None) -> bool:
         """Mark job as ready using database-level fencing.

@@ -16,3 +16,6 @@ htmlcov/
 .DS_Store
 .mimosa/
 .venv/
+datasets/
+results/
+*.db
